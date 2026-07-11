@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { callbackUrl, safeNext } from '$lib/redirects';
+import { appUrl, safeNext } from '$lib/redirects';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ url }) => {
@@ -11,11 +11,12 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const email = String(formData.get('email') ?? '');
 		const next = safeNext(String(formData.get('next') ?? url.searchParams.get('next') ?? ''));
-		const updateUrl = new URL('/update-password', url.origin);
-		updateUrl.searchParams.set('next', next);
+		const resetUrl = new URL('/reset-password', appUrl());
+		resetUrl.searchParams.set('type', 'recovery');
+		resetUrl.searchParams.set('next', next);
 
 		const { error } = await locals.supabase.auth.resetPasswordForEmail(email, {
-			redirectTo: updateUrl.toString()
+			redirectTo: resetUrl.toString()
 		});
 
 		if (error) {
