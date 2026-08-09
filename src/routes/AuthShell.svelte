@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import Logo from '$lib/Logo.svelte';
 
 	type Props = {
 		title: string;
@@ -20,11 +21,7 @@
 	<div class="min-h-dvh bg-blue-50 px-4 py-6 text-slate-950 dark:bg-zinc-950 dark:text-white">
 		<header class="mx-auto flex w-full max-w-5xl items-center justify-between">
 			<a href="/login{next ? `?next=${encodeURIComponent(next)}` : ''}" aria-label="Linkio auth home">
-				<img
-					src={dark ? '/brand/linkio-dark.png' : '/brand/linkio-light.svg'}
-					alt="Linkio"
-					class="h-auto w-[86px]"
-				/>
+				<Logo class="h-auto w-[86px] text-slate-950 dark:text-white" />
 			</a>
 			<button
 				type="button"
