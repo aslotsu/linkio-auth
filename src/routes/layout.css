@@ -1,3 +1,151 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+/* Tailwind v4 defaults `dark:` to prefers-color-scheme. exo drives the theme from
+   a `.dark` class on <html> (tailwind.config.cjs → darkMode: 'selector'), so match
+   it here or the toggle in AuthShell has nothing to act on. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Design tokens ───
+   Mirrors exo/src/app.css. `inline` makes the utilities resolve straight to the
+   raw custom property, so redefining it under .dark below actually re-themes them
+   (a non-inline @theme would bake the light value into the utility). */
+@theme inline {
+	--font-sans: 'Parkinsans', ui-sans-serif, system-ui, sans-serif;
+
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-border: var(--border);
+	--color-ring: var(--ring);
+}
+
+:root {
+	color-scheme: light;
+
+	--background: #f8fafc; /* slate-50 */
+	--foreground: #1e293b; /* slate-800 */
+	--card: #ffffff;
+	--card-foreground: #1e293b; /* slate-800 */
+	--muted: #f1f5f9; /* slate-100 */
+	--muted-foreground: #64748b; /* slate-500 */
+	--accent: #f59e0b; /* amber-500 */
+	--accent-foreground: #ffffff;
+	--primary: #2563eb; /* blue-600 */
+	--primary-foreground: #ffffff;
+	--border: #e2e8f0; /* slate-200 */
+	--ring: #2563eb; /* blue-600 */
+}
+
+.dark {
+	color-scheme: dark;
+
+	--background: #18181b; /* zinc-900 */
+	--foreground: #f4f4f5; /* zinc-100 */
+	--card: #27272a; /* zinc-800 */
+	--card-foreground: #f4f4f5; /* zinc-100 */
+	--muted: #3f3f46; /* zinc-700 */
+	--muted-foreground: #a1a1aa; /* zinc-400 */
+	--accent: #3f3f46; /* zinc-700 */
+	--accent-foreground: #f4f4f5;
+	--primary: #cbd5e1; /* slate-300 — exo inverts primary to a light neutral in dark */
+	--primary-foreground: #0f172a;
+	--border: #3f3f46; /* zinc-700 */
+	--ring: #cbd5e1; /* slate-300 */
+}
+
+/* ─── Shared UI primitives ───
+   Same class names and same recipes as exo's @layer components block, so the
+   vocabulary carries across repos. Only the primitives auth actually uses are
+   ported (exo's chip/dialog/shell classes have no consumer here).
+
+   Declared with @utility rather than @layer components: in v4 `@apply` resolves
+   utilities only, so a plain `.ui-btn` class cannot be composed into the variants
+   below the way it is in exo's v3 config. */
+@utility ui-card {
+	@apply rounded-lg border border-border bg-card text-card-foreground shadow-sm;
+}
+
+@utility ui-input {
+	@apply w-full rounded-lg border border-border bg-card px-3 py-2.5 text-foreground transition-colors duration-150 placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring focus:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility ui-btn {
+	/* ring-offset-background is an addition over exo, which leaves the offset
+	   white — invisible in light, but a white halo on the dark page. */
+	@apply inline-flex items-center justify-center rounded-lg font-medium ring-offset-background transition-colors duration-150 focus:ring-2 focus:ring-offset-2 focus:outline-none active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility ui-btn-primary {
+	@apply ui-btn bg-primary px-4 py-2.5 text-sm text-primary-foreground hover:opacity-90 focus:ring-primary;
+}
+@utility ui-btn-secondary {
+	@apply ui-btn border border-border bg-muted px-4 py-2.5 text-sm text-foreground hover:opacity-90 focus:ring-border;
+}
+
+/* Form feedback. exo has no alert primitive — it hand-rolls bg-red-50/text-red-700
+   per site — but the four auth pages repeat the same two banners, so they are
+   factored out here and given the dark variants the pages were missing. */
+@utility ui-alert-error {
+	@apply rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300;
+}
+@utility ui-alert-success {
+	@apply rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300;
+}
+
+/* ─── Base ─── */
+body {
+	@apply bg-background text-foreground;
+	font-family: 'Parkinsans', sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 500;
+	font-style: normal;
+}
+
+input {
+	@apply text-foreground placeholder:text-muted-foreground;
+}
+
+/* ─── Toasts ───
+   svelte-sonner's `richColors` ships its own green/red palette. Realign the four
+   semantic hues with exo's toast treatment (src/routes/+layout.svelte). */
+:root {
+	--success-bg: #ecfdf5;
+	--success-border: #a7f3d0;
+	--success-text: #10b981;
+	--error-bg: #fef2f2;
+	--error-border: #fecaca;
+	--error-text: #ef4444;
+	--warning-bg: #fffbeb;
+	--warning-border: #fde68a;
+	--warning-text: #f59e0b;
+	--info-bg: #eff6ff;
+	--info-border: #bfdbfe;
+	--info-text: #3b82f6;
+}
+
+.dark {
+	--success-bg: #052e21;
+	--success-border: #065f46;
+	--success-text: #34d399;
+	--error-bg: #2d0607;
+	--error-border: #7f1d1d;
+	--error-text: #f87171;
+	--warning-bg: #2e2100;
+	--warning-border: #78350f;
+	--warning-text: #fbbf24;
+	--info-bg: #0b1a33;
+	--info-border: #1e40af;
+	--info-text: #60a5fa;
+
+	--normal-bg: #27272a;
+	--normal-border: #3f3f46;
+	--normal-text: #f4f4f5;
+}

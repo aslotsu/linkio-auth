@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { onMount } from 'svelte';
 	import Logo from '$lib/Logo.svelte';
 
 	type Props = {
@@ -10,36 +11,49 @@
 	};
 
 	let { title, subtitle, next, children }: Props = $props();
-	let dark = $state(false);
+
+	// The boot script in app.html has already put `.dark` on <html> before paint;
+	// read it back so the button label agrees with what is on screen.
+	let isDark = $state(false);
+	onMount(() => {
+		isDark = document.documentElement.classList.contains('dark');
+	});
+
+	// Writes the same localStorage key the main app reads, so the choice follows
+	// the user between auth.linkio.ca and app.linkio.ca.
+	function toggleTheme() {
+		isDark = !isDark;
+		document.documentElement.classList.toggle('dark', isDark);
+		localStorage.setItem('theme', isDark ? 'dark' : 'light');
+	}
 </script>
 
 <svelte:head>
 	<title>{title} | Linkio</title>
 </svelte:head>
 
-<div class:dark>
-	<div class="min-h-dvh bg-blue-50 px-4 py-6 text-slate-950 dark:bg-zinc-950 dark:text-white">
-		<header class="mx-auto flex w-full max-w-5xl items-center justify-between">
-			<a href="/login{next ? `?next=${encodeURIComponent(next)}` : ''}" aria-label="Linkio auth home">
-				<Logo class="h-auto w-[86px] text-slate-950 dark:text-white" />
-			</a>
-			<button
-				type="button"
-				class="rounded-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
-				onclick={() => (dark = !dark)}
-			>
-				{dark ? 'Light' : 'Dark'}
-			</button>
-		</header>
+<div class="min-h-dvh bg-background px-4 py-6 text-foreground">
+	<header class="mx-auto flex w-full max-w-5xl items-center justify-between">
+		<a href="/login{next ? `?next=${encodeURIComponent(next)}` : ''}" aria-label="Linkio auth home">
+			<Logo class="h-auto w-[86px] text-foreground" />
+		</a>
+		<button
+			type="button"
+			class="inline-flex items-center rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors duration-150 hover:bg-muted focus:ring-2 focus:ring-ring focus:outline-none"
+			aria-label="Switch to {isDark ? 'light' : 'dark'} theme"
+			onclick={toggleTheme}
+		>
+			{isDark ? 'Light' : 'Dark'}
+		</button>
+	</header>
 
-		<main class="mx-auto flex min-h-[calc(100dvh-96px)] w-full max-w-md items-center">
-			<section class="w-full rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-				<div class="mb-6">
-					<h1 class="text-2xl font-semibold tracking-normal">{title}</h1>
-					<p class="mt-2 text-sm text-slate-600 dark:text-zinc-400">{subtitle}</p>
-				</div>
-				{@render children()}
-			</section>
-		</main>
-	</div>
+	<main class="mx-auto flex min-h-[calc(100dvh-96px)] w-full max-w-md items-center">
+		<section class="w-full ui-card p-6">
+			<div class="mb-6">
+				<h1 class="text-2xl font-semibold tracking-normal">{title}</h1>
+				<p class="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+			</div>
+			{@render children()}
+		</section>
+	</main>
 </div>
